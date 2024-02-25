@@ -1,0 +1,62 @@
+version: '3'
+
+services:
+  api:
+    image: pierre5977/chatroom-api:latest
+    environment:
+      DB_HOST: db
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: chatroom
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - phpmyadmin
+    networks:
+      - mynetwork
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: chatroom
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./api/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - mynetwork
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_USER: user
+      PMA_PASSWORD: password
+    ports:
+      - "8181:80"
+    networks:
+      - mynetwork
+
+  thread:
+    image: pierre5977/chatroom-thread:latest
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+    networks:
+      - mynetwork
+
+  sender:
+    image: pierre5977/chatroom-sender:latest
+    ports:
+      - "8082:80"
+    depends_on:
+      - api
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
